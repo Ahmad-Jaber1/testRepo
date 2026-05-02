@@ -1,14 +1,8 @@
+```csharp id="yq482"
 using System;
 
 namespace InventoryRestockFeeCalculator
 {
-    public class InvalidRestockDataException : Exception
-    {
-        public InvalidRestockDataException(string message) : base(message)
-        {
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -20,97 +14,55 @@ namespace InventoryRestockFeeCalculator
                 int daysSincePurchase = 15;
                 bool isLoyaltyMember = true;
 
-                double fee = CalculateRestockFee(
+                double fee1 = CalculateRestockFee(
                     itemPrice,
                     conditionScore,
                     daysSincePurchase,
                     isLoyaltyMember);
 
-                Console.WriteLine($"Fee 1: {fee:C}");
+                Console.WriteLine($"Fee 1: {fee1:C}");
+
+                double fee2 = CalculateRestockFee(
+                    150.0,
+                    5,
+                    30,
+                    false);
+
+                Console.WriteLine($"Fee 2: {fee2:C}");
+
+                double fee3 = CalculateRestockFee(
+                    300.0,
+                    3,
+                    45,
+                    true);
+
+                Console.WriteLine($"Fee 3: {fee3:C}");
+
+                double fee4 = CalculateRestockFee(
+                    100.0,
+                    7,
+                    -5,
+                    false);
+
+                Console.WriteLine($"Fee 4: {fee4:C}");
             }
-            catch (InvalidRestockDataException ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
 
             try
             {
-                double itemPrice = 150.0;
-                int conditionScore = 5;
-                int daysSincePurchase = 30;
-                bool isLoyaltyMember = false;
+                double fee5 = CalculateRestockFee(
+                    250.0,
+                    6,
+                    -10,
+                    true,
+                    true);
 
-                double fee = CalculateRestockFee(
-                    itemPrice,
-                    conditionScore,
-                    daysSincePurchase,
-                    isLoyaltyMember);
-
-                Console.WriteLine($"Fee 2: {fee:C}");
+                Console.WriteLine($"Fee 5: {fee5:C}");
             }
-            catch (InvalidRestockDataException ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-            try
-            {
-                double itemPrice = 300.0;
-                int conditionScore = 3;
-                int daysSincePurchase = 45;
-                bool isLoyaltyMember = true;
-
-                double fee = CalculateRestockFee(
-                    itemPrice,
-                    conditionScore,
-                    daysSincePurchase,
-                    isLoyaltyMember);
-
-                Console.WriteLine($"Fee 3: {fee:C}");
-            }
-            catch (InvalidRestockDataException ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-            try
-            {
-                double itemPrice = 100.0;
-                int conditionScore = 7;
-                int daysSincePurchase = -5;
-                bool isLoyaltyMember = false;
-
-                double fee = CalculateRestockFee(
-                    itemPrice,
-                    conditionScore,
-                    daysSincePurchase,
-                    isLoyaltyMember);
-
-                Console.WriteLine($"Fee 4: {fee:C}");
-            }
-            catch (InvalidRestockDataException ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-            try
-            {
-                double itemPrice = 250.0;
-                int conditionScore = 6;
-                int daysSincePurchase = -10;
-                bool isLoyaltyMember = true;
-                bool forceCalculation = true;
-
-                double fee = CalculateRestockFee(
-                    itemPrice,
-                    conditionScore,
-                    daysSincePurchase,
-                    isLoyaltyMember,
-                    forceCalculation);
-
-                Console.WriteLine($"Fee 5: {fee:C}");
-            }
-            catch (InvalidRestockDataException ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
@@ -138,22 +90,11 @@ namespace InventoryRestockFeeCalculator
             bool isLoyaltyMember,
             bool forceCalculation)
         {
-            if (itemPrice <= 0)
-            {
-                throw new InvalidRestockDataException(
-                    "Item price must be greater than zero.");
-            }
-
-            if (conditionScore < 1 || conditionScore > 10)
-            {
-                throw new InvalidRestockDataException(
-                    "Condition score must be between 1 and 10.");
-            }
+            ValidateBasicData(itemPrice, conditionScore);
 
             if (!forceCalculation && daysSincePurchase < 0)
             {
-                throw new InvalidRestockDataException(
-                    "Days since purchase cannot be negative.");
+                throw new Exception("Days cannot be negative.");
             }
 
             return ProcessFee(
@@ -163,59 +104,55 @@ namespace InventoryRestockFeeCalculator
                 isLoyaltyMember);
         }
 
-        private static void ValidateData(
+        static void ValidateData(
             double itemPrice,
             int conditionScore,
             int daysSincePurchase)
         {
+            ValidateBasicData(itemPrice, conditionScore);
+
+            if (daysSincePurchase < 0)
+            {
+                throw new Exception("Days cannot be negative.");
+            }
+        }
+
+        static void ValidateBasicData(
+            double itemPrice,
+            int conditionScore)
+        {
             if (itemPrice <= 0)
             {
-                throw new InvalidRestockDataException(
-                    "Item price must be greater than zero.");
+                throw new Exception("Price must be positive.");
             }
 
             if (conditionScore < 1 || conditionScore > 10)
             {
-                throw new InvalidRestockDataException(
-                    "Condition score must be between 1 and 10.");
-            }
-
-            if (daysSincePurchase < 0)
-            {
-                throw new InvalidRestockDataException(
-                    "Days since purchase cannot be negative.");
+                throw new Exception("Condition score must be between 1 and 10.");
             }
         }
 
-        private static double ProcessFee(
+        static double ProcessFee(
             double itemPrice,
             int conditionScore,
             int daysSincePurchase,
             bool isLoyaltyMember)
         {
-            double feePercentage;
-
-            if (daysSincePurchase > 30)
-            {
-                feePercentage = 0.0;
-            }
-            else if (conditionScore < 5)
-            {
-                feePercentage = 0.50;
-            }
-            else
-            {
-                feePercentage = 0.20;
-            }
+            double feePercentage = daysSincePurchase > 30
+                ? 0.0
+                : conditionScore < 5
+                ? 0.50
+                : 0.20;
 
             double feeAmount = itemPrice * feePercentage;
 
-            if (isLoyaltyMember)
-            {
-                feeAmount -= feeAmount * 0.10;
-            }
+            feeAmount = isLoyaltyMember
+                ? feeAmount - (feeAmount * 0.10)
+                : feeAmount;
 
             return feeAmount;
         }
     }
 }
+```
+
