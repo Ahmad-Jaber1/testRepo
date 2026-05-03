@@ -2,104 +2,88 @@ using System;
 
 class Program
 {
-    // Primary method (intentional mistake: return type is double instead of decimal)
-    static double CalculateRestockFee(decimal itemPrice, int conditionScore, int daysSincePurchase, bool isLoyaltyMember)
+    // Intentional mistake for Objective 10:
+    // Return type should be double, but it is int.
+    static int CalculateBonus(double salary, int rating, int yearsOfService)
     {
-        // Validation
-        if (conditionScore < 0 || conditionScore > 100)
+        double bonus = 0;
+
+        // Bonus logic
+        if (rating < 3)
         {
-            throw new ArgumentException("Condition score must be between 0 and 100.");
+            bonus = 0;
+        }
+        else if (rating >= 3)
+        {
+            bonus = salary * 0.05;
+
+            if (yearsOfService > 5)
+            {
+                bonus += salary * 0.02;
+            }
+
+            if (rating == 5 && yearsOfService > 10)
+            {
+                bonus += 1000;
+            }
         }
 
-        if (daysSincePurchase < 0)
-        {
-            throw new ArgumentException("Days since purchase cannot be negative.");
-        }
-
-        decimal feePercentage;
-
-        // Base fee logic
-        if (daysSincePurchase <= 7)
-        {
-            feePercentage = 0m;
-        }
-        else if (daysSincePurchase <= 30)
-        {
-            feePercentage = 0.15m;
-        }
-        else
-        {
-            feePercentage = 0.25m;
-        }
-
-        // Condition penalty
-        if (conditionScore < 50)
-        {
-            feePercentage += 0.10m;
-        }
-
-        // Calculate fee
-        decimal finalFee = itemPrice * feePercentage;
-
-        // Loyalty discount
-        if (isLoyaltyMember)
-        {
-            finalFee -= finalFee * 0.05m;
-        }
-
-        return (double)finalFee;
+        return (int)bonus;
     }
 
     // Overloaded method
-    static double CalculateRestockFee(decimal itemPrice, int conditionScore, int daysSincePurchase)
+    static int CalculateBonus(double salary, int rating, int yearsOfService, bool isExecutive)
     {
-        return CalculateRestockFee(itemPrice, conditionScore, daysSincePurchase, false);
+        double bonus = CalculateBonus(salary, rating, yearsOfService);
+
+        if (isExecutive)
+        {
+            bonus *= 1.5;
+        }
+
+        return (int)bonus;
     }
 
     static void Main(string[] args)
     {
-        // Valid test case with loyalty member
-        try
-        {
-            double fee1 = CalculateRestockFee(200m, 80, 20, true);
-            Console.WriteLine($"Fee 1: {fee1}");
-        }
-        catch (ArgumentException ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+        double[] salaries = { 50000, 70000, -1000, 90000, 120000 };
+        int[] ratings = { 2, 5, 4, 6, 5 };
+        int[] years = { 3, 12, 7, 8, -2 };
+        bool[] executives = { false, true, false, true, false };
 
-        // Valid test case using overloaded method
-        try
+        for (int i = 0; i < salaries.Length; i++)
         {
-            double fee2 = CalculateRestockFee(150m, 40, 40);
-            Console.WriteLine($"Fee 2: {fee2}");
-        }
-        catch (ArgumentException ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+            // Validation
+            if (ratings[i] < 1 || ratings[i] > 5)
+            {
+                Console.WriteLine($"Employee {i + 1}: Invalid rating.");
+                continue;
+            }
 
-        // Invalid condition score
-        try
-        {
-            double fee3 = CalculateRestockFee(100m, 120, 10, false);
-            Console.WriteLine($"Fee 3: {fee3}");
-        }
-        catch (ArgumentException ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+            if (salaries[i] < 0)
+            {
+                Console.WriteLine($"Employee {i + 1}: Invalid salary.");
+                continue;
+            }
 
-        // Invalid days since purchase
-        try
-        {
-            double fee4 = CalculateRestockFee(100m, 70, -5, true);
-            Console.WriteLine($"Fee 4: {fee4}");
-        }
-        catch (ArgumentException ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
+            if (years[i] < 0)
+            {
+                Console.WriteLine($"Employee {i + 1}: Invalid years of service.");
+                continue;
+            }
+
+            int bonus;
+
+            if (executives[i])
+            {
+                bonus = CalculateBonus(salaries[i], ratings[i], years[i], true);
+            }
+            else
+            {
+                bonus = CalculateBonus(salaries[i], ratings[i], years[i]);
+            }
+
+            Console.WriteLine($"Employee {i + 1} Bonus: ${bonus}");
         }
     }
 }
