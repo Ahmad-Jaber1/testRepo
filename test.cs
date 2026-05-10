@@ -1,89 +1,180 @@
+```csharp
 using System;
+using System.Collections.Generic;
 
-class Program
+namespace EmployeeBonusCalculator
 {
-    // Intentional mistake for Objective 10:
-    // Return type should be double, but it is int.
-    static int CalculateBonus(double salary, int rating, int yearsOfService)
+    // Custom Exception
+    public class InvalidEmployeeDataException : Exception
     {
-        double bonus = 0;
-
-        // Bonus logic
-        if (rating < 3)
+        public InvalidEmployeeDataException(string message) : base(message)
         {
-            bonus = 0;
         }
-        else if (rating >= 3)
-        {
-            bonus = salary * 0.05;
+    }
 
-            if (yearsOfService > 5)
+    // Employee Class
+    public class Employee
+    {
+        public int EmployeeId { get; set; }
+        public string Name { get; set; }
+        public int YearsOfService { get; set; }
+        public int PerformanceRating { get; set; }
+        public double Salary { get; set; }
+        public double CalculatedBonus { get; set; }
+        public bool IsExecutive { get; set; }
+    }
+
+    class Program
+    {
+        // Primary CalculateBonus Method
+        public static double CalculateBonus(int yearsOfService, int performanceRating, double salary)
+        {
+            // Validation
+            if (salary <= 0 || yearsOfService < 0 || performanceRating < 1 || performanceRating > 5)
             {
-                bonus += salary * 0.02;
+                throw new InvalidEmployeeDataException(
+                    "Invalid employee data: Salary must be positive, YearsOfService cannot be negative, and PerformanceRating must be between 1 and 5."
+                );
             }
 
-            if (rating == 5 && yearsOfService > 10)
+            double bonusPercentage = 0.0;
+
+            // Bonus Percentage Logic
+            if (performanceRating < 3)
+            {
+                bonusPercentage = 0.0;
+            }
+            else if (performanceRating == 3)
+            {
+                bonusPercentage = 0.05;
+            }
+            else if (performanceRating == 4)
+            {
+                bonusPercentage = 0.10;
+            }
+            else if (performanceRating == 5)
+            {
+                bonusPercentage = 0.15;
+            }
+
+            // Base Bonus
+            double bonus = salary * bonusPercentage;
+
+            // Tenure Multiplier
+            if (yearsOfService > 10)
+            {
+                bonus *= 1.5;
+            }
+            else if (yearsOfService > 5)
+            {
+                bonus *= 1.2;
+            }
+
+            return bonus;
+        }
+
+        // Overloaded CalculateBonus Method
+        public static double CalculateBonus(int yearsOfService, int performanceRating, double salary, bool isExecutive)
+        {
+            double bonus = CalculateBonus(yearsOfService, performanceRating, salary);
+
+            if (isExecutive)
             {
                 bonus += 1000;
             }
+
+            return bonus;
         }
 
-        return (int)bonus;
-    }
-
-    // Overloaded method
-    static int CalculateBonus(double salary, int rating, int yearsOfService, bool isExecutive)
-    {
-        double bonus = CalculateBonus(salary, rating, yearsOfService);
-
-        if (isExecutive)
+        static void Main(string[] args)
         {
-            bonus *= 1.5;
-        }
-
-        return (int)bonus;
-    }
-
-    static void Main(string[] args)
-    {
-        double[] salaries = { 50000, 70000, -1000, 90000, 120000 };
-        int[] ratings = { 2, 5, 4, 6, 5 };
-        int[] years = { 3, 12, 7, 8, -2 };
-        bool[] executives = { false, true, false, true, false };
-
-        for (int i = 0; i < salaries.Length; i++)
-        {
-            // Validation
-            if (ratings[i] < 1 || ratings[i] > 5)
+            // Employee Collection
+            List<Employee> employees = new List<Employee>()
             {
-                Console.WriteLine($"Employee {i + 1}: Invalid rating.");
-                continue;
+                new Employee
+                {
+                    EmployeeId = 1,
+                    Name = "Alice",
+                    YearsOfService = 3,
+                    PerformanceRating = 3,
+                    Salary = 50000,
+                    IsExecutive = false
+                },
+
+                new Employee
+                {
+                    EmployeeId = 2,
+                    Name = "Bob",
+                    YearsOfService = 7,
+                    PerformanceRating = 4,
+                    Salary = 70000,
+                    IsExecutive = true
+                },
+
+                new Employee
+                {
+                    EmployeeId = 3,
+                    Name = "Charlie",
+                    YearsOfService = 12,
+                    PerformanceRating = 5,
+                    Salary = 90000,
+                    IsExecutive = false
+                },
+
+                new Employee
+                {
+                    EmployeeId = 4,
+                    Name = "David",
+                    YearsOfService = 2,
+                    PerformanceRating = 6, // Invalid Rating
+                    Salary = 45000,
+                    IsExecutive = false
+                },
+
+                new Employee
+                {
+                    EmployeeId = 5,
+                    Name = "Eva",
+                    YearsOfService = 4,
+                    PerformanceRating = 4,
+                    Salary = -30000, // Invalid Salary
+                    IsExecutive = true
+                }
+            };
+
+            // Process Employees
+            foreach (Employee employee in employees)
+            {
+                try
+                {
+                    employee.CalculatedBonus = CalculateBonus(
+                        employee.YearsOfService,
+                        employee.PerformanceRating,
+                        employee.Salary,
+                        employee.IsExecutive
+                    );
+
+                    Console.WriteLine(
+                        $"Employee: {employee.Name}, Bonus: ${employee.CalculatedBonus:F2}"
+                    );
+                }
+                catch (InvalidEmployeeDataException ex)
+                {
+                    Console.WriteLine(
+                        $"Error processing employee {employee.Name}: {ex.Message}"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Unexpected error for employee {employee.Name}: {ex.Message}"
+                    );
+                }
             }
 
-            if (salaries[i] < 0)
-            {
-                Console.WriteLine($"Employee {i + 1}: Invalid salary.");
-                continue;
-            }
-
-            if (years[i] < 0)
-            {
-                Console.WriteLine($"Employee {i + 1}: Invalid years of service.");
-                continue;
-            }
-
-            int bonus;
-
-            if (executives[i])
-            {
-                bonus = CalculateBonus(salaries[i], ratings[i], years[i], true);
-            }
-            else
-            {
-                bonus = CalculateBonus(salaries[i], ratings[i], years[i]);
-            }
-
-            Console.WriteLine($"Employee {i + 1} Bonus: ${bonus}");
+            Console.ReadLine();
         }
     }
 }
+```
+
