@@ -1,18 +1,18 @@
+```csharp
 using System;
 using System.Collections.Generic;
 
 namespace EmployeeBonusCalculator
 {
-    // Custom Exception Class
+    // Custom Exception
     public class InvalidEmployeeDataException : Exception
     {
-        public InvalidEmployeeDataException(string message)
-            : base(message)
+        public InvalidEmployeeDataException(string message) : base(message)
         {
         }
     }
 
-    // Employee Class
+    // Employee Model
     public class Employee
     {
         public string Name { get; set; }
@@ -20,33 +20,120 @@ namespace EmployeeBonusCalculator
         public int PerformanceRating { get; set; }
         public int YearsOfService { get; set; }
         public bool IsManager { get; set; }
-
-        public Employee(string name, double baseSalary, int performanceRating, int yearsOfService, bool isManager)
-        {
-            Name = name;
-            BaseSalary = baseSalary;
-            PerformanceRating = performanceRating;
-            YearsOfService = yearsOfService;
-            IsManager = isManager;
-        }
     }
 
     class Program
     {
+        // Primary Method
+        public static double CalculateBonus(double baseSalary, int performanceRating, int yearsOfService)
+        {
+            // Validation
+            if (baseSalary < 0)
+            {
+                throw new InvalidEmployeeDataException("Salary cannot be negative.");
+            }
+
+            if (performanceRating < 1 || performanceRating > 5)
+            {
+                throw new InvalidEmployeeDataException("Performance rating must be between 1 and 5.");
+            }
+
+            double bonus = 0;
+
+            // Tiered Logic
+            if (performanceRating < 3)
+            {
+                bonus = 0;
+            }
+            else if (performanceRating == 3 || performanceRating == 4)
+            {
+                double percentage = 0.05 + (0.01 * yearsOfService);
+                bonus = baseSalary * percentage;
+            }
+            else if (performanceRating == 5)
+            {
+                double percentage = 0.10 + (0.02 * yearsOfService);
+                bonus = baseSalary * percentage;
+            }
+
+            // Apply 50% cap
+            double maxBonus = baseSalary * 0.50;
+
+            if (bonus > maxBonus)
+            {
+                bonus = maxBonus;
+            }
+
+            return bonus;
+        }
+
+        // Overloaded Method
+        public static double CalculateBonus(double baseSalary, int performanceRating, int yearsOfService, bool isManager)
+        {
+            double bonus = CalculateBonus(baseSalary, performanceRating, yearsOfService);
+
+            if (isManager)
+            {
+                bonus *= 1.5;
+
+                // Re-apply cap after manager bump
+                double maxBonus = baseSalary * 0.50;
+
+                if (bonus > maxBonus)
+                {
+                    bonus = maxBonus;
+                }
+            }
+
+            return bonus;
+        }
+
         static void Main(string[] args)
         {
-            // List of mock employees
-            List<Employee> employees = new List<Employee>()
+            List<Employee> employees = new List<Employee>
             {
-                new Employee("Alice", 50000, 5, 10, true),
-                new Employee("Bob", 40000, 4, 5, false),
-                new Employee("Charlie", 35000, 2, 3, false),
-                new Employee("David", -45000, 5, 8, true),   // Invalid salary
-                new Employee("Emma", 60000, 7, 6, false),   // Invalid rating
-                new Employee("Frank", 70000, 3, 15, true)
+                new Employee
+                {
+                    Name = "Alice",
+                    BaseSalary = 50000,
+                    PerformanceRating = 5,
+                    YearsOfService = 5,
+                    IsManager = true
+                },
+                new Employee
+                {
+                    Name = "Bob",
+                    BaseSalary = 40000,
+                    PerformanceRating = 4,
+                    YearsOfService = 3,
+                    IsManager = false
+                },
+                new Employee
+                {
+                    Name = "Charlie",
+                    BaseSalary = 35000,
+                    PerformanceRating = 2,
+                    YearsOfService = 1,
+                    IsManager = false
+                },
+                new Employee
+                {
+                    Name = "David",
+                    BaseSalary = -45000,
+                    PerformanceRating = 5,
+                    YearsOfService = 4,
+                    IsManager = true
+                },
+                new Employee
+                {
+                    Name = "Eva",
+                    BaseSalary = 60000,
+                    PerformanceRating = 6,
+                    YearsOfService = 10,
+                    IsManager = false
+                }
             };
 
-            // Process each employee
             foreach (Employee employee in employees)
             {
                 try
@@ -58,78 +145,24 @@ namespace EmployeeBonusCalculator
                         employee.IsManager
                     );
 
-                    Console.WriteLine("=================================");
-                    Console.WriteLine($"Employee: {employee.Name}");
-                    Console.WriteLine($"Salary: {employee.BaseSalary:C}");
-                    Console.WriteLine($"Rating: {employee.PerformanceRating}");
-                    Console.WriteLine($"Years of Service: {employee.YearsOfService}");
-                    Console.WriteLine($"Manager: {employee.IsManager}");
-                    Console.WriteLine($"Final Bonus: {bonus:C}");
+                    Console.WriteLine("Employee: " + employee.Name);
+                    Console.WriteLine("Salary: $" + employee.BaseSalary);
+                    Console.WriteLine("Rating: " + employee.PerformanceRating);
+                    Console.WriteLine("Years of Service: " + employee.YearsOfService);
+                    Console.WriteLine("Manager: " + employee.IsManager);
+                    Console.WriteLine("Calculated Bonus: $" + bonus);
+                    Console.WriteLine(new string('-', 40));
                 }
                 catch (InvalidEmployeeDataException ex)
                 {
-                    Console.WriteLine("=================================");
                     Console.WriteLine($"Error processing employee {employee.Name}: {ex.Message}");
+                    Console.WriteLine(new string('-', 40));
                 }
             }
 
-            Console.WriteLine("\nProgram completed.");
-        }
-
-        // First overloaded method
-        public static double CalculateBonus(double baseSalary, int performanceRating, int yearsOfService)
-        {
-            // Calls overloaded version with default manager status = false
-            return CalculateBonus(baseSalary, performanceRating, yearsOfService, false);
-        }
-
-        // Second overloaded method
-        public static double CalculateBonus(double baseSalary, int performanceRating, int yearsOfService, bool isManager)
-        {
-            // Validation
-            if (baseSalary < 0)
-            {
-                throw new InvalidEmployeeDataException("Negative Salary is not allowed.");
-            }
-
-            if (performanceRating < 1 || performanceRating > 5)
-            {
-                throw new InvalidEmployeeDataException("Invalid Rating. Rating must be between 1 and 5.");
-            }
-
-            double bonus = 0;
-
-            // Bonus calculation logic
-            if (performanceRating < 3)
-            {
-                bonus = 0;
-            }
-            else if (performanceRating == 3 || performanceRating == 4)
-            {
-                // 5% base + 1% per year of service
-                bonus = baseSalary * (0.05 + (0.01 * yearsOfService));
-            }
-            else if (performanceRating == 5)
-            {
-                // 10% base + 2% per year of service
-                bonus = baseSalary * (0.10 + (0.02 * yearsOfService));
-            }
-
-            // Manager uplift
-            if (isManager)
-            {
-                bonus *= 1.5;
-            }
-
-            // Bonus cap = 50% of salary
-            double maxBonus = baseSalary * 0.50;
-
-            if (bonus > maxBonus)
-            {
-                bonus = maxBonus;
-            }
-
-            return bonus;
+            Console.ReadLine();
         }
     }
 }
+```
+
